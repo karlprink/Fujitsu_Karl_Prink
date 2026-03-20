@@ -42,7 +42,7 @@ class WeatherImportCronServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Süstime URL-i, kuna @Value annotatsioon standardse Unit Testi puhul automaatselt ei tööta
+        // dummy url
         ReflectionTestUtils.setField(weatherImportCronJobService, "weatherUrl", "http://dummy-url.com");
     }
 
@@ -51,28 +51,28 @@ class WeatherImportCronServiceTest {
      */
     @Test
     void importWeatherData_success_filtersAndSavesCorrectStations() {
-        // 1. Arrange (Seadista testandmed)
+        // Arrange test data
         WeatherDataXmlDto.Observations mockObservations = new WeatherDataXmlDto.Observations();
-        mockObservations.setTimestamp(1710000000L); // Suvaline Unix timestamp
+        mockObservations.setTimestamp(1710000000L); // Random Unix timestamp
 
         WeatherDataXmlDto.Station tallinn = createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
         WeatherDataXmlDto.Station tartu = createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
-        WeatherDataXmlDto.Station randomCity = createMockStation("Võru", "26258", 0.0, 1.0, ""); // Seda ei tohiks salvestada!
+        WeatherDataXmlDto.Station randomCity = createMockStation("Võru", "26258", 0.0, 1.0, ""); // Should not be saved
 
         mockObservations.setStations(List.of(tallinn, tartu, randomCity));
 
         when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDto.Observations.class)))
                 .thenReturn(mockObservations);
 
-        // 2. Act (Käivita meetod)
+        // Act
         weatherImportCronJobService.importWeatherData();
 
-        // 3. Assert (Kontrolli tulemust)
+        // Assert
         verify(weatherDataRepository, times(1)).saveAll(weatherDataListCaptor.capture());
 
         List<WeatherData> savedData = weatherDataListCaptor.getValue();
 
-        // Kontrollime, et salvestati täpselt 2 jaama (Tallinn ja Tartu), Võru filtreeriti välja
+        // Check if only 2 stations were saved
         assertEquals(2, savedData.size());
         assertEquals("Tallinn-Harku", savedData.get(0).getStationName());
         assertEquals("Tartu-Tõravere", savedData.get(1).getStationName());
@@ -116,7 +116,7 @@ class WeatherImportCronServiceTest {
     private WeatherDataXmlDto.Station createMockStation(String name, String wmo, Double temp, Double wind, String phenomenon) {
         WeatherDataXmlDto.Station station = new WeatherDataXmlDto.Station();
         station.setName(name);
-        station.setWmo(wmo);
+        station.setWmocode(wmo);
         station.setAirTemperature(temp);
         station.setWindSpeed(wind);
         station.setWeatherPhenomenon(phenomenon);
