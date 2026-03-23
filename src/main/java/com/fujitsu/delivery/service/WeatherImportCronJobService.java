@@ -1,6 +1,6 @@
 package com.fujitsu.delivery.service;
 
-import com.fujitsu.delivery.dto.WeatherDataXmlDto;
+import com.fujitsu.delivery.dto.WeatherDataXmlDTO;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.repository.WeatherDataRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -33,6 +35,8 @@ public class WeatherImportCronJobService {
             "Tartu-Tõravere",
             "Pärnu"
     );
+    @Value("${weather.import.cron}")
+    private String cronExpressionString;
 
     /**
      * Scheduled task to fetch weather data from the external portal, filter required stations,
@@ -45,7 +49,7 @@ public class WeatherImportCronJobService {
         log.info("Starting scheduled weather data import from URL: {}", weatherUrl);
 
         try {
-            WeatherDataXmlDto.Observations observations = restTemplate.getForObject(weatherUrl, WeatherDataXmlDto.Observations.class);
+            WeatherDataXmlDTO.Observations observations = restTemplate.getForObject(weatherUrl, WeatherDataXmlDTO.Observations.class);
 
             if (observations != null && observations.getStations() != null) {
                 LocalDateTime observationTime = LocalDateTime.ofInstant(
@@ -75,10 +79,54 @@ public class WeatherImportCronJobService {
         }
     }
 
+    /**
+     * Checks on application startup whether the database requires an initial data load.
+     * The interval is dynamically calculated from the cron expression in application.yml.
+     * Data is imported only if the database is completely empty or if the latest entry
+     * is older than the dynamic cron interval, preventing unnecessary API calls on restarts.
+     */
     @EventListener(ApplicationReadyEvent.class)
     public void importDataOnStartup() {
-        log.info("Application started. Forcing an initial weather data import...");
-        importWeatherData();
+        log.info("Application started. Checking if initial weather data import is needed...");
+
+        var latestData = weatherDataRepository.findFirstByOrderByObservationTimestampDesc();
+        boolean shouldImport = false;
+
+        if (latestData.isEmpty()) {
+            log.info("Database is empty. Triggering initial import.");
+            shouldImport = true;
+        } else {
+            LocalDateTime latestTimestamp = latestData.get().getObservationTimestamp();
+
+            // Calculate the dynamic interval directly from the cron expression
+            CronExpression cron = CronExpression.parse(cronExpressionString);
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime nextExecution = cron.next(now);
+
+            if (nextExecution != null) {
+                LocalDateTime afterNextExecution = cron.next(nextExecution);
+
+                if (afterNextExecution != null) {
+                    // This is dynamic cron interval (e.g., 1 hour, 15 minutes, etc.)
+                    Duration cronInterval = Duration.between(nextExecution, afterNextExecution);
+
+                    // Check if the latest entry is older than our dynamic interval
+                    if (latestTimestamp.isBefore(now.minus(cronInterval))) {
+                        log.info("Latest weather data is from {}, which is older than the cron interval ({} minutes). Triggering update.",
+                                latestTimestamp, cronInterval.toMinutes());
+                        shouldImport = true;
+                    } else {
+                        log.info("Recent weather data (from {}) is within the {} minute interval. Skipping startup import.",
+                                latestTimestamp, cronInterval.toMinutes());
+                    }
+                }
+            }
+        }
+
+        if (shouldImport) {
+            importWeatherData();
+        }
     }
 
     /**
@@ -88,7 +136,7 @@ public class WeatherImportCronJobService {
      * @param timestamp The observation timestamp extracted from the XML root
      * @return WeatherData entity ready to be saved
      */
-    private WeatherData buildWeatherData(WeatherDataXmlDto.Station station, LocalDateTime timestamp) {
+    private WeatherData buildWeatherData(WeatherDataXmlDTO.Station station, LocalDateTime timestamp) {
         return WeatherData.builder()
                 .stationName(station.getName())
                 .wmoCode(station.getWmocode())

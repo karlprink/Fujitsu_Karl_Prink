@@ -8,7 +8,7 @@ import lombok.Data;
 
 import java.util.List;
 
-public class WeatherDataXmlDto {
+public class WeatherDataXmlDTO {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JacksonXmlRootElement(localName = "observations")

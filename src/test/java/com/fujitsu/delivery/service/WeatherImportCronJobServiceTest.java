@@ -1,6 +1,6 @@
 package com.fujitsu.delivery.service;
 
-import com.fujitsu.delivery.dto.WeatherDataXmlDto;
+import com.fujitsu.delivery.dto.WeatherDataXmlDTO;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.repository.WeatherDataRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,16 +52,16 @@ class WeatherImportCronServiceTest {
     @Test
     void importWeatherData_success_filtersAndSavesCorrectStations() {
         // Arrange test data
-        WeatherDataXmlDto.Observations mockObservations = new WeatherDataXmlDto.Observations();
+        WeatherDataXmlDTO.Observations mockObservations = new WeatherDataXmlDTO.Observations();
         mockObservations.setTimestamp(1710000000L); // Random Unix timestamp
 
-        WeatherDataXmlDto.Station tallinn = createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
-        WeatherDataXmlDto.Station tartu = createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
-        WeatherDataXmlDto.Station randomCity = createMockStation("Võru", "26258", 0.0, 1.0, ""); // Should not be saved
+        WeatherDataXmlDTO.Station tallinn = createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
+        WeatherDataXmlDTO.Station tartu = createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
+        WeatherDataXmlDTO.Station randomCity = createMockStation("Võru", "26258", 0.0, 1.0, ""); // Should not be saved
 
         mockObservations.setStations(List.of(tallinn, tartu, randomCity));
 
-        when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDto.Observations.class)))
+        when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDTO.Observations.class)))
                 .thenReturn(mockObservations);
 
         // Act
@@ -84,7 +84,7 @@ class WeatherImportCronServiceTest {
     @Test
     void importWeatherData_emptyResponse_doesNothing() {
         // Arrange
-        when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDto.Observations.class)))
+        when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDTO.Observations.class)))
                 .thenReturn(null);
 
         // Act
@@ -100,7 +100,7 @@ class WeatherImportCronServiceTest {
     @Test
     void importWeatherData_apiError_throwsRuntimeException() {
         // Arrange
-        when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDto.Observations.class)))
+        when(restTemplate.getForObject(anyString(), eq(WeatherDataXmlDTO.Observations.class)))
                 .thenThrow(new RuntimeException("API is down"));
 
         // Act & Assert
@@ -113,8 +113,8 @@ class WeatherImportCronServiceTest {
     }
 
     // test data
-    private WeatherDataXmlDto.Station createMockStation(String name, String wmo, Double temp, Double wind, String phenomenon) {
-        WeatherDataXmlDto.Station station = new WeatherDataXmlDto.Station();
+    private WeatherDataXmlDTO.Station createMockStation(String name, String wmo, Double temp, Double wind, String phenomenon) {
+        WeatherDataXmlDTO.Station station = new WeatherDataXmlDTO.Station();
         station.setName(name);
         station.setWmocode(wmo);
         station.setAirTemperature(temp);

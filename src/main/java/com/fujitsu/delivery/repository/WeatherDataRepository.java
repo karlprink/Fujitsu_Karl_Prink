@@ -23,4 +23,6 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
     Optional<WeatherData> findFirstByStationNameOrderByObservationTimestampDesc(String stationName);
 
     boolean existsByStationNameAndObservationTimestamp(String stationName, LocalDateTime timestamp);
+
+    Optional<WeatherData> findFirstByOrderByObservationTimestampDesc();
 }
