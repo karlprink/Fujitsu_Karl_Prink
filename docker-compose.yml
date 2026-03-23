@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  delivery-app:
+    build: .
+    container_name: fujitsu-delivery-app
+    ports:
+      - "8080:8080"
+    volumes:
+      # For permanent database
+      - ./data:/app/data
+    restart: unless-stopped
