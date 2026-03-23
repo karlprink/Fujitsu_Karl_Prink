@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:weatherdb
+    url: jdbc:h2:file:/app/data/weatherdb
     driverClassName: org.h2.Driver
     username: sa
     password:
@@ -12,6 +12,8 @@ spring:
     console:
       enabled: true
       path: /h2-console
+      settings:
+        web-allow-others: true
 
 weather:
   import:
