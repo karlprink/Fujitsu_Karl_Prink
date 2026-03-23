@@ -2,6 +2,7 @@ package com.fujitsu.delivery.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -38,6 +39,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException exception) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /**
+     * Handles Spring exceptions thrown when a required API request parameter
+     * (e.g., 'city' or 'vehicleType') is missing from the request URL.
+     *
+     * @param ex The caught MissingServletRequestParameterException containing the missing parameter name
+     * @return ResponseEntity containing a 400 Bad Request status and a descriptive error message
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Object> handleMissingParams(MissingServletRequestParameterException ex) {
+        String message = "Missing required parameter: " + ex.getParameterName();
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
     /**
