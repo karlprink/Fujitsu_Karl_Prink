@@ -4,6 +4,7 @@ import com.fujitsu.delivery.entity.WeatherData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -20,4 +21,6 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
      * @return Optional containing the latest WeatherData if found
      */
     Optional<WeatherData> findFirstByStationNameOrderByObservationTimestampDesc(String stationName);
+
+    boolean existsByStationNameAndObservationTimestamp(String stationName, LocalDateTime timestamp);
 }

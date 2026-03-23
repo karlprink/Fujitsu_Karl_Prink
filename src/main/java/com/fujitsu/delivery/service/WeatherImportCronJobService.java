@@ -6,6 +6,8 @@ import com.fujitsu.delivery.repository.WeatherDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -45,7 +47,6 @@ public class WeatherImportCronJobService {
         try {
             WeatherDataXmlDto.Observations observations = restTemplate.getForObject(weatherUrl, WeatherDataXmlDto.Observations.class);
 
-            //Convert unix time to readable time
             if (observations != null && observations.getStations() != null) {
                 LocalDateTime observationTime = LocalDateTime.ofInstant(
                         Instant.ofEpochSecond(observations.getTimestamp()),
@@ -54,11 +55,16 @@ public class WeatherImportCronJobService {
 
                 List<WeatherData> weatherDataList = observations.getStations().stream()
                         .filter(station -> TARGET_STATIONS.contains(station.getName()))
+                        .filter(station -> !weatherDataRepository.existsByStationNameAndObservationTimestamp(station.getName(), observationTime))
                         .map(station -> buildWeatherData(station, observationTime))
                         .toList();
 
-                weatherDataRepository.saveAll(weatherDataList);
-                log.info("Successfully imported and saved {} weather data records.", weatherDataList.size());
+                if (!weatherDataList.isEmpty()) {
+                    weatherDataRepository.saveAll(weatherDataList);
+                    log.info("Successfully imported and saved {} NEW weather data records.", weatherDataList.size());
+                } else {
+                    log.info("No new weather data to import. Database is already up to date.");
+                }
             } else {
                 log.warn("Weather data XML was empty or malformed.");
             }
@@ -69,10 +75,16 @@ public class WeatherImportCronJobService {
         }
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void importDataOnStartup() {
+        log.info("Application started. Forcing an initial weather data import...");
+        importWeatherData();
+    }
+
     /**
      * Maps a parsed XML station DTO to the database Entity.
      *
-     * @param station The parsed station data
+     * @param station   The parsed station data
      * @param timestamp The observation timestamp extracted from the XML root
      * @return WeatherData entity ready to be saved
      */
