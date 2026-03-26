@@ -79,4 +79,52 @@ class DeliveryFeeControllerTest {
                         .param("city", "Tartu"))
                 .andExpect(status().isBadRequest());
     }
+
+    /**
+     * Tests the scenario where an invalid argument is provided (e.g., an unknown city).
+     * Verifies that the GlobalExceptionHandler intercepts IllegalArgumentException
+     * and translates it into a 400 Bad Request JSON response.
+     *
+     * @throws Exception if the MockMvc request execution fails
+     */
+    @Test
+    void calculateFee_invalidArgument_returnsBadRequest() throws Exception {
+        // Arrange: throw an IllegalArgumentException
+        when(feeCalculationService.calculateDeliveryFee("Atlantis", "Car"))
+                .thenThrow(new IllegalArgumentException("Invalid city: Atlantis"));
+
+        // Act & Assert: 400 Bad Request formatting
+        mockMvc.perform(get("/api/delivery-fee")
+                        .param("city", "Atlantis")
+                        .param("vehicleType", "Car"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid city: Atlantis"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    /**
+     * Tests the catch-all exception handler for unexpected internal server errors.
+     * Verifies that the GlobalExceptionHandler intercepts generic Exceptions
+     * and returns a safe 500 Internal Server Error JSON response without leaking sensitive stack traces.
+     *
+     * @throws Exception if the MockMvc request execution fails
+     */
+    @Test
+    void calculateFee_unexpectedError_returnsInternalServerError() throws Exception {
+        // Arrange: RuntimeException
+        when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car"))
+                .thenThrow(new RuntimeException("Database connection completely failed"));
+
+        // Act & Assert: 500 Internal Server Error formatting
+        mockMvc.perform(get("/api/delivery-fee")
+                        .param("city", "Tallinn")
+                        .param("vehicleType", "Car"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message").value("An unexpected internal server error occurred"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 }
