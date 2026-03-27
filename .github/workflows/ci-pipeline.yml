@@ -6,8 +6,11 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+permissions:
+  contents: write
+
 jobs:
-  # 1. TÖÖ: Saladuste skännimine (Security)
+  # Secrets
   secret-scanning:
     name: Scan for Secrets
     runs-on: ubuntu-latest
@@ -22,7 +25,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 2. TÖÖ: Koodi kvaliteet ja testimine
+  # Quality and build
   build-and-test:
     name: Lint, Build and Test
     runs-on: ubuntu-latest
@@ -39,10 +42,21 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Kontrollib, kas kood vastab Google Java Format standardile (Nagu Black --check)
       - name: Run Linter / Formatter Check (Spotless)
         run: mvn spotless:check -B
 
-      # Ehitab rakenduse ja jooksutab testid
       - name: Run Maven Tests
         run: mvn clean test -B
+
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: target/site/jacoco/jacoco.csv
+
+      - name: Commit and push the badge
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: 'chore: update test coverage badges'
+          add: '.github/badges/'
