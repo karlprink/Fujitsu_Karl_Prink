@@ -69,7 +69,7 @@ A robust Spring Boot REST application that calculates delivery fees for differen
   "message": "Usage of selected vehicle type is forbidden"
   }
 
-# 🗄️ Database Access (H2 Console)
+# Database Access (H2 Console)
 
 You can inspect the saved weather data directly through the web browser.
 
@@ -98,7 +98,7 @@ to view the fetched weather conditions.
 
 ---
 
-# 🏗️ Key Architectural Decisions
+# Key Architectural Decisions
 
 ## API Prefixing (`/api/...`)
 
