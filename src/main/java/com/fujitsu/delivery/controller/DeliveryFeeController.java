@@ -14,19 +14,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DeliveryFeeController {
 
-    private final DeliveryFeeCalculationService deliveryFeeCalculationService;
+  private final DeliveryFeeCalculationService deliveryFeeCalculationService;
 
-    /**
-     * Calculates the delivery fee based on the specified city and vehicle type.
-     * The calculation incorporates regional base fees and current weather conditions.
-     *
-     * @param city        The target city for delivery (Tallinn, Tartu, Pärnu)
-     * @param vehicleType The type of vehicle used (Car, Scooter, Bike)
-     * @return ResponseEntity containing the calculated total delivery fee
-     */
-    @GetMapping
-    public ResponseEntity<DeliveryFeeDTO> calculateFee(@RequestParam String city, @RequestParam String vehicleType) {
-        DeliveryFeeDTO response = deliveryFeeCalculationService.calculateDeliveryFee(city, vehicleType);
-        return ResponseEntity.ok(response);
-    }
+  /**
+   * Calculates the delivery fee based on the specified city and vehicle type. The calculation
+   * incorporates regional base fees and current weather conditions.
+   *
+   * @param city The target city for delivery (Tallinn, Tartu, Pärnu)
+   * @param vehicleType The type of vehicle used (Car, Scooter, Bike)
+   * @return ResponseEntity containing the calculated total delivery fee
+   */
+  @GetMapping
+  public ResponseEntity<DeliveryFeeDTO> calculateFee(
+      @RequestParam String city, @RequestParam String vehicleType) {
+    DeliveryFeeDTO response = deliveryFeeCalculationService.calculateDeliveryFee(city, vehicleType);
+    return ResponseEntity.ok(response);
+  }
 }

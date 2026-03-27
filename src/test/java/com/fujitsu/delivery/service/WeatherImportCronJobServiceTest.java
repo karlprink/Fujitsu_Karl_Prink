@@ -1,8 +1,16 @@
 package com.fujitsu.delivery.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.fujitsu.delivery.dto.WeatherDataXmlDTO;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.repository.WeatherDataRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,181 +19,171 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for WeatherImportCronJobService using Mockito.
- */
+/** Unit tests for WeatherImportCronJobService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class WeatherImportCronServiceTest {
 
-    @Mock
-    private RestTemplate restTemplate;
+  @Mock private RestTemplate restTemplate;
 
-    @Mock
-    private WeatherDataRepository weatherDataRepository;
+  @Mock private WeatherDataRepository weatherDataRepository;
 
-    // Eemaldasime @InjectMocks, kuna teeme ise Spy
-    private WeatherImportCronJobService weatherImportCronJobService;
+  // Eemaldasime @InjectMocks, kuna teeme ise Spy
+  private WeatherImportCronJobService weatherImportCronJobService;
 
-    @Captor
-    private ArgumentCaptor<List<WeatherData>> weatherDataListCaptor;
+  @Captor private ArgumentCaptor<List<WeatherData>> weatherDataListCaptor;
 
-    @BeforeEach
-    void setUp() {
-        weatherImportCronJobService = Mockito.spy(new WeatherImportCronJobService(restTemplate, weatherDataRepository));
+  @BeforeEach
+  void setUp() {
+    weatherImportCronJobService =
+        Mockito.spy(new WeatherImportCronJobService(restTemplate, weatherDataRepository));
 
-        ReflectionTestUtils.setField(weatherImportCronJobService, "weatherUrl", "http://dummy-url.com");
-        ReflectionTestUtils.setField(weatherImportCronJobService, "cronExpressionString", "0 15 * * * ?");
-    }
+    ReflectionTestUtils.setField(weatherImportCronJobService, "weatherUrl", "http://dummy-url.com");
+    ReflectionTestUtils.setField(
+        weatherImportCronJobService, "cronExpressionString", "0 15 * * * ?");
+  }
 
-    /**
-     * Tests that weather data is correctly fetched, filtered, and saved.
-     */
-    @Test
-    void importWeatherData_success_filtersAndSavesCorrectStations() {
-        // Arrange test data
-        WeatherDataXmlDTO.Observations mockObservations = new WeatherDataXmlDTO.Observations();
-        mockObservations.setTimestamp(1710000000L); // Random Unix timestamp
+  /** Tests that weather data is correctly fetched, filtered, and saved. */
+  @Test
+  void importWeatherData_success_filtersAndSavesCorrectStations() {
+    // Arrange test data
+    WeatherDataXmlDTO.Observations mockObservations = new WeatherDataXmlDTO.Observations();
+    mockObservations.setTimestamp(1710000000L); // Random Unix timestamp
 
-        WeatherDataXmlDTO.Station tallinn = createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
-        WeatherDataXmlDTO.Station tartu = createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
-        WeatherDataXmlDTO.Station randomCity = createMockStation("Võru", "26258", 0.0, 1.0, ""); // Should not be saved
+    WeatherDataXmlDTO.Station tallinn =
+        createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
+    WeatherDataXmlDTO.Station tartu = createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
+    WeatherDataXmlDTO.Station randomCity =
+        createMockStation("Võru", "26258", 0.0, 1.0, ""); // Should not be saved
 
-        mockObservations.setStations(List.of(tallinn, tartu, randomCity));
+    mockObservations.setStations(List.of(tallinn, tartu, randomCity));
 
-        when(restTemplate.getForObject(eq("http://dummy-url.com"), eq(WeatherDataXmlDTO.Observations.class)))
-                .thenReturn(mockObservations);
+    when(restTemplate.getForObject(
+            eq("http://dummy-url.com"), eq(WeatherDataXmlDTO.Observations.class)))
+        .thenReturn(mockObservations);
 
-        // Act
-        weatherImportCronJobService.importWeatherData();
+    // Act
+    weatherImportCronJobService.importWeatherData();
 
-        // Assert
-        verify(weatherDataRepository, times(1)).saveAll(weatherDataListCaptor.capture());
+    // Assert
+    verify(weatherDataRepository, times(1)).saveAll(weatherDataListCaptor.capture());
 
-        List<WeatherData> savedData = weatherDataListCaptor.getValue();
+    List<WeatherData> savedData = weatherDataListCaptor.getValue();
 
-        // Check if only 2 stations were saved
-        assertEquals(2, savedData.size());
-        assertEquals("Tallinn-Harku", savedData.get(0).getStationName());
-        assertEquals("Tartu-Tõravere", savedData.get(1).getStationName());
-    }
+    // Check if only 2 stations were saved
+    assertEquals(2, savedData.size());
+    assertEquals("Tallinn-Harku", savedData.get(0).getStationName());
+    assertEquals("Tartu-Tõravere", savedData.get(1).getStationName());
+  }
 
-    /**
-     * Tests that no data is saved when the API response is empty.
-     */
-    @Test
-    void importWeatherData_emptyResponse_doesNothing() {
-        // Arrange
-        when(restTemplate.getForObject(eq("http://dummy-url.com"), eq(WeatherDataXmlDTO.Observations.class)))
-                .thenReturn(null);
+  /** Tests that no data is saved when the API response is empty. */
+  @Test
+  void importWeatherData_emptyResponse_doesNothing() {
+    // Arrange
+    when(restTemplate.getForObject(
+            eq("http://dummy-url.com"), eq(WeatherDataXmlDTO.Observations.class)))
+        .thenReturn(null);
 
-        // Act
-        weatherImportCronJobService.importWeatherData();
+    // Act
+    weatherImportCronJobService.importWeatherData();
 
-        // Assert
-        verify(weatherDataRepository, never()).saveAll(any());
-    }
+    // Assert
+    verify(weatherDataRepository, never()).saveAll(any());
+  }
 
-    /**
-     * Tests that a RuntimeException is thrown when the API call fails.
-     */
-    @Test
-    void importWeatherData_apiError_throwsRuntimeException() {
-        // Arrange
-        when(restTemplate.getForObject(eq("http://dummy-url.com"), eq(WeatherDataXmlDTO.Observations.class)))
-                .thenThrow(new RuntimeException("API is down"));
+  /** Tests that a RuntimeException is thrown when the API call fails. */
+  @Test
+  void importWeatherData_apiError_throwsRuntimeException() {
+    // Arrange
+    when(restTemplate.getForObject(
+            eq("http://dummy-url.com"), eq(WeatherDataXmlDTO.Observations.class)))
+        .thenThrow(new RuntimeException("API is down"));
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            weatherImportCronJobService.importWeatherData();
-        });
+    // Act & Assert
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+              weatherImportCronJobService.importWeatherData());
 
-        assertEquals("Weather data import failed", exception.getMessage());
-        verify(weatherDataRepository, never()).saveAll(any());
-    }
+    assertEquals("Weather data import failed", exception.getMessage());
+    verify(weatherDataRepository, never()).saveAll(any());
+  }
 
-    @Test
-    void importDataOnStartup_databaseEmpty_triggersImport() {
-        // Arrange
-        when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
-                .thenReturn(Optional.empty());
+  @Test
+  void importDataOnStartup_databaseEmpty_triggersImport() {
+    // Arrange
+    when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
+        .thenReturn(Optional.empty());
 
-        // Block the actual data fetching process (prevent HTTP calls during the test)
-        doNothing().when(weatherImportCronJobService).importWeatherData();
+    // Block the actual data fetching process (prevent HTTP calls during the test)
+    doNothing().when(weatherImportCronJobService).importWeatherData();
 
-        // Act
-        weatherImportCronJobService.importDataOnStartup();
+    // Act
+    weatherImportCronJobService.importDataOnStartup();
 
-        // Assert
-        // Verify that the actual import method was called exactly once
-        verify(weatherImportCronJobService, times(1)).importWeatherData();
-    }
+    // Assert
+    // Verify that the actual import method was called exactly once
+    verify(weatherImportCronJobService, times(1)).importWeatherData();
+  }
 
-    /**
-     * Tests the scenario where the database already contains recent weather data.
-     * Expected behavior: The system should recognize the data is fresh and skip the import.
-     */
-    @Test
-    void importDataOnStartup_recentDataExists_skipsImport() {
-        // Arrange
-        // Based on the cron expression, the interval is 1 hour. We mock data that is only 30 minutes old.
-        WeatherData recentData = WeatherData.builder()
-                .observationTimestamp(LocalDateTime.now().minusMinutes(30))
-                .build();
+  /**
+   * Tests the scenario where the database already contains recent weather data. Expected behavior:
+   * The system should recognize the data is fresh and skip the import.
+   */
+  @Test
+  void importDataOnStartup_recentDataExists_skipsImport() {
+    // Arrange
+    // Based on the cron expression, the interval is 1 hour. We mock data that is only 30 minutes
+    // old.
+    WeatherData recentData =
+        WeatherData.builder().observationTimestamp(LocalDateTime.now().minusMinutes(30)).build();
 
-        when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
-                .thenReturn(Optional.of(recentData));
+    when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
+        .thenReturn(Optional.of(recentData));
 
-        // Act
-        weatherImportCronJobService.importDataOnStartup();
+    // Act
+    weatherImportCronJobService.importDataOnStartup();
 
-        // Assert
-        // Verify that the import method was NEVER called because the data is within the acceptable interval
-        verify(weatherImportCronJobService, never()).importWeatherData();
-    }
+    // Assert
+    // Verify that the import method was NEVER called because the data is within the acceptable
+    // interval
+    verify(weatherImportCronJobService, never()).importWeatherData();
+  }
 
-    /**
-     * Tests the scenario where the database contains outdated weather data.
-     * Expected behavior: The system should recognize the data is older than the cron interval and trigger an import.
-     */
-    @Test
-    void importDataOnStartup_oldDataExists_triggersImport() {
-        // Arrange
-        // Based on the cron expression, the interval is 1 hour. We mock data that is 65 minutes old.
-        WeatherData oldData = WeatherData.builder()
-                .observationTimestamp(LocalDateTime.now().minusMinutes(65))
-                .build();
+  /**
+   * Tests the scenario where the database contains outdated weather data. Expected behavior: The
+   * system should recognize the data is older than the cron interval and trigger an import.
+   */
+  @Test
+  void importDataOnStartup_oldDataExists_triggersImport() {
+    // Arrange
+    // Based on the cron expression, the interval is 1 hour. We mock data that is 65 minutes old.
+    WeatherData oldData =
+        WeatherData.builder().observationTimestamp(LocalDateTime.now().minusMinutes(65)).build();
 
-        when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
-                .thenReturn(Optional.of(oldData));
+    when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
+        .thenReturn(Optional.of(oldData));
 
-        // Block the actual data fetching process
-        doNothing().when(weatherImportCronJobService).importWeatherData();
+    // Block the actual data fetching process
+    doNothing().when(weatherImportCronJobService).importWeatherData();
 
-        // Act
-        weatherImportCronJobService.importDataOnStartup();
+    // Act
+    weatherImportCronJobService.importDataOnStartup();
 
-        // Assert
-        // Verify that the system recognized the data as outdated and triggered the import
-        verify(weatherImportCronJobService, times(1)).importWeatherData();
-    }
+    // Assert
+    // Verify that the system recognized the data as outdated and triggered the import
+    verify(weatherImportCronJobService, times(1)).importWeatherData();
+  }
 
-    // test data
-    private WeatherDataXmlDTO.Station createMockStation(String name, String wmo, Double temp, Double wind, String phenomenon) {
-        WeatherDataXmlDTO.Station station = new WeatherDataXmlDTO.Station();
-        station.setName(name);
-        station.setWmocode(wmo);
-        station.setAirTemperature(temp);
-        station.setWindSpeed(wind);
-        station.setWeatherPhenomenon(phenomenon);
-        return station;
-    }
+  // test data
+  private WeatherDataXmlDTO.Station createMockStation(
+      String name, String wmo, Double temp, Double wind, String phenomenon) {
+    WeatherDataXmlDTO.Station station = new WeatherDataXmlDTO.Station();
+    station.setName(name);
+    station.setWmocode(wmo);
+    station.setAirTemperature(temp);
+    station.setWindSpeed(wind);
+    station.setWeatherPhenomenon(phenomenon);
+    return station;
+  }
 }
