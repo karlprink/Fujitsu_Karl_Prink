@@ -86,9 +86,7 @@ class DeliveryFeeCalculationServiceTest {
     VehicleForbiddenException exception =
         assertThrows(
             VehicleForbiddenException.class,
-            () ->
-              deliveryFeeCalculationService.calculateDeliveryFee("Tallinn", "Bike"));
-
+            () -> deliveryFeeCalculationService.calculateDeliveryFee("Tallinn", "Bike"));
 
     assertEquals("Usage of selected vehicle type is forbidden", exception.getMessage());
   }
@@ -110,8 +108,7 @@ class DeliveryFeeCalculationServiceTest {
     VehicleForbiddenException exception =
         assertThrows(
             VehicleForbiddenException.class,
-            () ->
-              deliveryFeeCalculationService.calculateDeliveryFee("Tartu", "Scooter"));
+            () -> deliveryFeeCalculationService.calculateDeliveryFee("Tartu", "Scooter"));
 
     assertEquals("Usage of selected vehicle type is forbidden", exception.getMessage());
   }
@@ -124,8 +121,7 @@ class DeliveryFeeCalculationServiceTest {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-              deliveryFeeCalculationService.calculateDeliveryFee("Pärnu", "Bike"));
+            () -> deliveryFeeCalculationService.calculateDeliveryFee("Pärnu", "Bike"));
 
     assertEquals("Weather data not found for city: Pärnu", exception.getMessage());
   }
@@ -135,8 +131,7 @@ class DeliveryFeeCalculationServiceTest {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-              deliveryFeeCalculationService.calculateDeliveryFee("Võru", "Car"));
+            () -> deliveryFeeCalculationService.calculateDeliveryFee("Võru", "Car"));
 
     assertEquals("Invalid city: VÕRU", exception.getMessage());
   }

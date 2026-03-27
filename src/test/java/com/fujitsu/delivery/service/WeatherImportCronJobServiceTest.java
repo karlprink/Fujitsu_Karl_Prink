@@ -100,10 +100,7 @@ class WeatherImportCronServiceTest {
 
     // Act & Assert
     RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-              weatherImportCronJobService.importWeatherData());
+        assertThrows(RuntimeException.class, () -> weatherImportCronJobService.importWeatherData());
 
     assertEquals("Weather data import failed", exception.getMessage());
     verify(weatherDataRepository, never()).saveAll(any());
