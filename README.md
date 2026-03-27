@@ -2,6 +2,8 @@
 
 # Delivery Fee Calculator (Fujitsu Trial Task/Fujitsu proovitöö)
 
+![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg)
+
 A robust Spring Boot REST application that calculates delivery fees for different vehicle types based on regional base fees and real-time weather conditions in Estonia.
 
 ## Features
