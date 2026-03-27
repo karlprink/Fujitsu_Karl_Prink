@@ -89,6 +89,12 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <formats>
+                                <format>HTML</format>
+                                <format>CSV</format>
+                            </formats>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
