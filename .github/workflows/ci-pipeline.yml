@@ -46,7 +46,7 @@ jobs:
         run: mvn spotless:check -B
 
       - name: Run Maven Tests
-        run: mvn clean test -B
+        run: mvn clean test jacoco:report -B
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
