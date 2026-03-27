@@ -48,8 +48,15 @@ jobs:
       - name: Run Maven Tests
         run: mvn clean test -B
 
-      - name: Generate JaCoCo Report Explicitly
-        run: mvn jacoco:report -B
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: target/site/jacoco/jacoco.csv
 
-      - name: Debug Folder Contents
-        run: ls -la target/site/jacoco/ || echo "Folder still missing"
+      - name: Commit and push the badge
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: 'chore: update test coverage badges'
+          add: '.github/badges/'
