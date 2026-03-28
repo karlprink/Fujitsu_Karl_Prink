@@ -2,7 +2,8 @@
 
 # Delivery Fee Calculator (Fujitsu Trial Task/Fujitsu proovitöö)
 
-![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
 
 A robust Spring Boot REST application that calculates delivery fees for different vehicle types based on regional base fees and real-time weather conditions in Estonia.
 
@@ -14,6 +15,9 @@ A robust Spring Boot REST application that calculates delivery fees for differen
 * **Global Exception Handling:** Uses `@ControllerAdvice` to gracefully catch business logic errors (e.g., forbidden vehicle usage due to extreme weather) and bad requests, returning standardized and readable JSON responses instead of stack traces.
 * **Containerized:** Fully Dockerized with a multi-stage build process for lightweight and efficient deployment, including persistent volume mapping for the H2 database.
 * **High Test Coverage:** Comprehensive unit and WebMvc tests using JUnit 5 and modern Mockito practices (`@MockitoBean`).
+* **Historical Weather Data Support:** Delivery fees can be calculated for past dates using the timestamp parameter.
+* **Dynamic Fee Management (CRUD):** Base fees are not hardcoded. They are stored in an H2 database and can be managed dynamically via a dedicated REST API without restarting the application.
+
 
 ## Tech Stack
 
@@ -58,6 +62,47 @@ A robust Spring Boot REST application that calculates delivery fees for differen
   {
     "totalFee": 3.5
   }
+
+## 2. Manage Base Fees (CRUD)
+
+The application seeds default base fees on startup, but they can be modified on the fly.
+
+### List all base fees
+
+```
+GET /api/rules/base-fees
+```
+
+### Add new fee rule
+
+```
+POST /api/rules/base-fees
+```
+
+### Update existing rule
+
+```
+PUT /api/rules/base-fees/{id}
+```
+
+### Delete fee rule
+
+```
+DELETE /api/rules/base-fees/{id}
+```
+
+### Example Request (Update Tallinna Bike base fee to 4.0€)
+
+```bash
+curl -X PUT "http://localhost:8080/api/rules/base-fees/3" \
+     -H "Content-Type: application/json" \
+     -d '{
+          "city": "TALLINN",
+          "vehicleType": "BIKE",
+          "fee": 4.0
+         }'
+```
+
 
 ### Example Error Response (400 Bad Request)
 (Triggered if weather conditions are too extreme for the selected vehicle)
