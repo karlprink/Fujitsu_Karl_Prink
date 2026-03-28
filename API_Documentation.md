@@ -88,3 +88,100 @@ Triggered when an unexpected error occurs on the server (e.g., database connecti
   "message": "An unexpected internal server error occurred"
   }
 ---
+---
+## 2. Manage Base Fees (CRUD)
+
+Provides a REST interface to dynamically manage the regional base fees used in the delivery fee calculations.
+
+**Base URL:** `/api/rules/base-fees`
+**Content-Type:** `application/json`
+
+---
+
+### 2.1 Get All Base Fees
+
+Retrieves a list of all currently configured base fee rules.
+
+**URL:** `/api/rules/base-fees`
+**Method:** `GET`
+
+**Success Response (200 OK):**
+
+```json
+[
+  {
+    "id": 1,
+    "city": "TALLINN",
+    "vehicleType": "CAR",
+    "fee": 4.0
+  },
+  {
+    "id": 2,
+    "city": "TALLINN",
+    "vehicleType": "SCOOTER",
+    "fee": 3.5
+  }
+]
+```
+
+---
+
+### 2.2 Create a New Base Fee
+
+Adds a new pricing rule for a city and vehicle combination.
+
+**URL:** `/api/rules/base-fees`
+**Method:** `POST`
+
+**Request Body:**
+
+```json
+{
+  "city": "NARVA",
+  "vehicleType": "BIKE",
+  "fee": 2.5
+}
+```
+
+**Success Response (200 OK):**
+Returns the saved entity with its generated `id`.
+
+---
+
+### 2.3 Update an Existing Base Fee
+
+Modifies the fee value or details of an existing rule by its ID.
+
+**URL:** `/api/rules/base-fees/{id}`
+**Method:** `PUT`
+
+**Request Body:**
+
+```json
+{
+  "city": "TALLINN",
+  "vehicleType": "BIKE",
+  "fee": 4.0
+}
+```
+
+**Success Response (200 OK):**
+Returns the updated entity.
+
+**Error Response (404 Not Found):**
+If the rule with the specified `{id}` does not exist.
+
+---
+
+### 2.4 Delete a Base Fee
+
+Removes a specific fee rule from the database.
+
+**URL:** `/api/rules/base-fees/{id}`
+**Method:** `DELETE`
+
+**Success Response (200 OK):**
+Empty body if the deletion was successful.
+
+**Error Response (404 Not Found):**
+If the rule with the specified `{id}` does not exist.

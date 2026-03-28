@@ -1,8 +1,10 @@
 package com.fujitsu.delivery.service;
 
 import com.fujitsu.delivery.dto.DeliveryFeeDTO;
+import com.fujitsu.delivery.entity.BaseFee;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.exception.VehicleForbiddenException;
+import com.fujitsu.delivery.repository.BaseFeeRepository;
 import com.fujitsu.delivery.repository.WeatherDataRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DeliveryFeeCalculationService {
   private final WeatherDataRepository weatherDataRepository;
+  private final BaseFeeRepository baseFeeRepository;
 
   /**
    * Calculates the total delivery fee based on city, vehicle type, and current weather conditions.
@@ -51,30 +54,15 @@ public class DeliveryFeeCalculationService {
   }
 
   private double calculateRegionalBaseFee(String city, String vehicle) {
-    return switch (city) {
-      case "TALLINN" ->
-          switch (vehicle) {
-            case "CAR" -> 4.0;
-            case "SCOOTER" -> 3.5;
-            case "BIKE" -> 3.0;
-            default -> throw new IllegalArgumentException("Invalid vehicle type: " + vehicle);
-          };
-      case "TARTU" ->
-          switch (vehicle) {
-            case "CAR" -> 3.5;
-            case "SCOOTER" -> 3.0;
-            case "BIKE" -> 2.5;
-            default -> throw new IllegalArgumentException("Invalid vehicle type: " + vehicle);
-          };
-      case "PÄRNU", "PARNU" ->
-          switch (vehicle) {
-            case "CAR" -> 3.0;
-            case "SCOOTER" -> 2.5;
-            case "BIKE" -> 2.0;
-            default -> throw new IllegalArgumentException("Invalid vehicle type: " + vehicle);
-          };
-      default -> throw new IllegalArgumentException("Invalid city: " + city);
-    };
+    BaseFee baseFeeRule =
+        baseFeeRepository
+            .findByCityIgnoreCaseAndVehicleTypeIgnoreCase(city, vehicle)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Base fee rule not found for city: " + city + " and vehicle: " + vehicle));
+
+    return baseFeeRule.getFee();
   }
 
   private double calculateExtraWeatherFees(WeatherData latestWeather, String vehicleUpper) {
