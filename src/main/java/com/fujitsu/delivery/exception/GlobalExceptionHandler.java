@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,6 +69,33 @@ public class GlobalExceptionHandler {
     System.err.println("Unexpected internal error " + exception.getMessage());
     return buildErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected internal server error occurred");
+  }
+
+  /**
+   * Handles HttpMessageNotReadableException, which is typically thrown when a client sends a
+   * request with a malformed or unparseable JSON body. * Instead of returning a generic server
+   * error, this handler constructs a user-friendly response containing a clear error message and an
+   * example of the expected JSON format to help the API consumer correct their request.
+   *
+   * @return a ResponseEntity containing the error details and the expected format structure, with a
+   *     400 Bad Request HTTP status
+   */
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<Object> handleMalformedJsonException() {
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("timestamp", LocalDateTime.now().toString());
+    body.put("status", HttpStatus.BAD_REQUEST.value());
+    body.put("error", "Bad Request");
+    body.put("message", "Malformed JSON request. Please check your request body format.");
+
+    Map<String, String> expectedFormat = new LinkedHashMap<>();
+    expectedFormat.put("city", "String (e.g., 'TALLINN')");
+    expectedFormat.put("vehicleType", "String (e.g., 'BIKE')");
+    expectedFormat.put("fee", "Number (e.g., 3.5)");
+
+    body.put("expectedFormat", expectedFormat);
+
+    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
   }
 
   private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {
