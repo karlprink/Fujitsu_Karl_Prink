@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DeliveryFeeCalculationService {
   private final WeatherDataRepository weatherDataRepository;
-    private final BaseFeeRepository baseFeeRepository;
+  private final BaseFeeRepository baseFeeRepository;
 
   /**
    * Calculates the total delivery fee based on city, vehicle type, and current weather conditions.
@@ -53,14 +53,17 @@ public class DeliveryFeeCalculationService {
     return new DeliveryFeeDTO(baseFee + extraFee);
   }
 
-    private double calculateRegionalBaseFee(String city, String vehicle) {
-        BaseFee baseFeeRule = baseFeeRepository
-                .findByCityIgnoreCaseAndVehicleTypeIgnoreCase(city, vehicle)
-                .orElseThrow(() -> new IllegalArgumentException(
+  private double calculateRegionalBaseFee(String city, String vehicle) {
+    BaseFee baseFeeRule =
+        baseFeeRepository
+            .findByCityIgnoreCaseAndVehicleTypeIgnoreCase(city, vehicle)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
                         "Base fee rule not found for city: " + city + " and vehicle: " + vehicle));
 
-        return baseFeeRule.getFee();
-    }
+    return baseFeeRule.getFee();
+  }
 
   private double calculateExtraWeatherFees(WeatherData latestWeather, String vehicleUpper) {
     double extraFee = 0.0;
