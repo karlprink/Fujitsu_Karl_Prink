@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fujitsu.delivery.dto.DeliveryFeeDTO;
 import com.fujitsu.delivery.exception.VehicleForbiddenException;
 import com.fujitsu.delivery.service.DeliveryFeeCalculationService;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,15 +27,13 @@ class DeliveryFeeControllerTest {
   @MockitoBean private DeliveryFeeCalculationService feeCalculationService;
 
   /**
-   * Tests a successful delivery fee calculation request. Expects a 200 OK status and a JSON
-   * response with the correct fee amount.
+   * Tests a successful delivery fee calculation request without a timestamp.
    *
    * @throws Exception if the MockMvc request execution fails
    */
   @Test
   void calculateFee_validRequest_returnsOkAndFee() throws Exception {
-
-    when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car"))
+    when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car", null))
         .thenReturn(new DeliveryFeeDTO(4.0));
 
     mockMvc
@@ -44,14 +43,35 @@ class DeliveryFeeControllerTest {
   }
 
   /**
-   * Tests the scenario where weather conditions forbid the selected vehicle. Expects the
-   * GlobalExceptionHandler to catch it and return a 400 Bad Request.
+   * Tests a successful delivery fee calculation request WITH a historical timestamp.
+   *
+   * @throws Exception if the MockMvc request execution fails
+   */
+  @Test
+  void calculateFee_withTimestamp_returnsOkAndFee() throws Exception {
+    LocalDateTime testTime = LocalDateTime.parse("2026-03-27T10:00:00");
+
+    when(feeCalculationService.calculateDeliveryFee("Tartu", "Bike", testTime))
+        .thenReturn(new DeliveryFeeDTO(3.5));
+
+    mockMvc
+        .perform(
+            get("/api/delivery-fee")
+                .param("city", "Tartu")
+                .param("vehicleType", "Bike")
+                .param("timestamp", "2026-03-27T10:00:00"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalFee").value(3.5));
+  }
+
+  /**
+   * Tests the scenario where weather conditions forbid the selected vehicle.
    *
    * @throws Exception if the MockMvc request execution fails
    */
   @Test
   void calculateFee_forbiddenVehicle_returnsBadRequest() throws Exception {
-    when(feeCalculationService.calculateDeliveryFee("Tallinn", "Bike"))
+    when(feeCalculationService.calculateDeliveryFee("Tallinn", "Bike", null))
         .thenThrow(new VehicleForbiddenException("Usage of selected vehicle type is forbidden"));
 
     mockMvc
@@ -64,8 +84,7 @@ class DeliveryFeeControllerTest {
   }
 
   /**
-   * Tests the scenario where a required request parameter is missing. Expects a 400 Bad Request
-   * status generated automatically by Spring.
+   * Tests the scenario where a required request parameter is missing.
    *
    * @throws Exception if the MockMvc request execution fails
    */
@@ -77,19 +96,15 @@ class DeliveryFeeControllerTest {
   }
 
   /**
-   * Tests the scenario where an invalid argument is provided (e.g., an unknown city). Verifies that
-   * the GlobalExceptionHandler intercepts IllegalArgumentException and translates it into a 400 Bad
-   * Request JSON response.
+   * Tests the scenario where an invalid argument is provided.
    *
    * @throws Exception if the MockMvc request execution fails
    */
   @Test
   void calculateFee_invalidArgument_returnsBadRequest() throws Exception {
-    // Arrange: throw an IllegalArgumentException
-    when(feeCalculationService.calculateDeliveryFee("Atlantis", "Car"))
+    when(feeCalculationService.calculateDeliveryFee("Atlantis", "Car", null))
         .thenThrow(new IllegalArgumentException("Invalid city: Atlantis"));
 
-    // Act & Assert: 400 Bad Request formatting
     mockMvc
         .perform(get("/api/delivery-fee").param("city", "Atlantis").param("vehicleType", "Car"))
         .andExpect(status().isBadRequest())
@@ -100,19 +115,15 @@ class DeliveryFeeControllerTest {
   }
 
   /**
-   * Tests the catch-all exception handler for unexpected internal server errors. Verifies that the
-   * GlobalExceptionHandler intercepts generic Exceptions and returns a safe 500 Internal Server
-   * Error JSON response without leaking sensitive stack traces.
+   * Tests the catch-all exception handler for unexpected internal server errors.
    *
    * @throws Exception if the MockMvc request execution fails
    */
   @Test
   void calculateFee_unexpectedError_returnsInternalServerError() throws Exception {
-    // Arrange: RuntimeException
-    when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car"))
+    when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car", null))
         .thenThrow(new RuntimeException("Database connection completely failed"));
 
-    // Act & Assert: 500 Internal Server Error formatting
     mockMvc
         .perform(get("/api/delivery-fee").param("city", "Tallinn").param("vehicleType", "Car"))
         .andExpect(status().isInternalServerError())

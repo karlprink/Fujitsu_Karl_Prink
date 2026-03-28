@@ -2,7 +2,9 @@ package com.fujitsu.delivery.controller;
 
 import com.fujitsu.delivery.dto.DeliveryFeeDTO;
 import com.fujitsu.delivery.service.DeliveryFeeCalculationService;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +28,12 @@ public class DeliveryFeeController {
    */
   @GetMapping
   public ResponseEntity<DeliveryFeeDTO> calculateFee(
-      @RequestParam String city, @RequestParam String vehicleType) {
-    DeliveryFeeDTO response = deliveryFeeCalculationService.calculateDeliveryFee(city, vehicleType);
+      @RequestParam String city,
+      @RequestParam String vehicleType,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime timestamp) {
+    DeliveryFeeDTO response =
+        deliveryFeeCalculationService.calculateDeliveryFee(city, vehicleType, timestamp);
     return ResponseEntity.ok(response);
   }
 }

@@ -4,6 +4,7 @@ import com.fujitsu.delivery.dto.DeliveryFeeDTO;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.exception.VehicleForbiddenException;
 import com.fujitsu.delivery.repository.WeatherDataRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,23 +20,30 @@ public class DeliveryFeeCalculationService {
    * @param vehicleType The type of vehicle used (Car, Scooter, Bike)
    * @return DeliveryFeeDTO containing the calculated fee
    */
-  public DeliveryFeeDTO calculateDeliveryFee(String city, String vehicleType) {
+  public DeliveryFeeDTO calculateDeliveryFee(
+      String city, String vehicleType, LocalDateTime timestamp) {
     String cityUpper = city.toUpperCase();
     String vehicleUpper = vehicleType.toUpperCase();
 
-    // Regional base fee
+    // If timestamp is null, use current time
+    LocalDateTime targetTime = (timestamp != null) ? timestamp : LocalDateTime.now();
+
     double baseFee = calculateRegionalBaseFee(cityUpper, vehicleUpper);
 
     if (vehicleUpper.equals("CAR")) {
       return new DeliveryFeeDTO(baseFee);
     }
+
     // Fetch data from database
     String stationName = getStationNameByCity(cityUpper);
     WeatherData latestWeather =
         weatherDataRepository
-            .findFirstByStationNameOrderByObservationTimestampDesc(stationName)
+            .findFirstByStationNameAndObservationTimestampLessThanEqualOrderByObservationTimestampDesc(
+                stationName, targetTime)
             .orElseThrow(
-                () -> new IllegalArgumentException("Weather data not found for city: " + city));
+                () ->
+                    new IllegalArgumentException(
+                        "Weather data not found for city: " + city + " at " + targetTime));
 
     double extraFee = calculateExtraWeatherFees(latestWeather, vehicleUpper);
 
