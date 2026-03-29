@@ -7,7 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 import lombok.Data;
 
-public class WeatherDataXmlDTO {
+public class NationalWeatherServiceWeatherData {
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)
   @JacksonXmlRootElement(localName = "observations")

@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeliveryFeeDTO {
+public class DeliveryFeeResponse {
   private Double totalFee;
 }
