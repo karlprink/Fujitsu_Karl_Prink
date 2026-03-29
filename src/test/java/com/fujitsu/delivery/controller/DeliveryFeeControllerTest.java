@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * codes, and JSON response mapping.
  */
 @WebMvcTest(DeliveryFeeController.class)
-class DeliveryFeeControllerTest { // TODO tee integratsioonitestid ilma servicei mockita
+class DeliveryFeeControllerTest {
 
   @Autowired private MockMvc mockMvc;
 
@@ -32,7 +32,7 @@ class DeliveryFeeControllerTest { // TODO tee integratsioonitestid ilma servicei
    * @throws Exception if the MockMvc request execution fails
    */
   @Test
-  void calculateFee_validRequest_returnsOkAndFee() throws Exception { // TODO teadmiseks: given when then
+  void calculateFee_validRequest_returnsOkAndFee() throws Exception {
     when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car", null))
         .thenReturn(new DeliveryFeeResponse(4.0));
 
