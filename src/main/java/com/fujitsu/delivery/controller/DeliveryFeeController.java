@@ -18,6 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for calculating delivery fees. This controller serves as the primary entry point
+ * for the delivery fee calculation engine, integrating regional base fees with real-time or
+ * historical weather surcharges.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/delivery-fee", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -31,11 +36,15 @@ public class DeliveryFeeController {
 
   /**
    * Calculates the delivery fee based on the specified city and vehicle type. The calculation
-   * incorporates regional base fees and current weather conditions.
+   * incorporates regional base fees and weather conditions. If a timestamp is provided, the fee is
+   * calculated based on weather data closest to that time.
    *
-   * @param city The target city for delivery (Tallinn, Tartu, Pärnu)
-   * @param vehicleType The type of vehicle used (Car, Scooter, Bike)
-   * @return ResponseEntity containing the calculated total delivery fee
+   * @param city The target city for delivery (e.g., Tallinn, Tartu, Pärnu).
+   * @param vehicleType The type of vehicle used (e.g., Car, Scooter, Bike).
+   * @param timestamp Optional ISO-8601 timestamp for historical fee calculation.
+   * @return A {@link ResponseEntity} containing the {@link DeliveryFeeResponse} with the total fee.
+   * @throws IllegalArgumentException if the vehicle type is forbidden due to weather or parameters
+   *     are invalid.
    */
   @GetMapping
   @Operation(

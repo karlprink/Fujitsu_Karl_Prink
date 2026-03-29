@@ -13,6 +13,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
+  /**
+   * Configures the OpenAPI (Swagger) documentation for the application. This bean defines the API
+   * metadata, including the title, version, description, and developer contact information.
+   *
+   * @return a customized {@link OpenAPI} instance used for generating Swagger UI.
+   */
   @Bean
   public OpenAPI customOpenAPI() {
     return new OpenAPI()

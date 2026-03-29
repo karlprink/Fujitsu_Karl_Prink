@@ -11,6 +11,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing the association between delivery cities and weather observation
+ * stations. This allows for dynamic expansion of supported regions without code modifications.
+ */
 @RestController
 @RequestMapping(value = "/api/cities", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
@@ -21,6 +25,11 @@ public class CityStationController {
 
   private final CityStationService cityStationService;
 
+  /**
+   * Retrieves a comprehensive list of all city-to-station mappings currently stored in the system.
+   *
+   * @return A {@link ResponseEntity} containing a list of {@link CityStationMapping} objects.
+   */
   @GetMapping
   @Operation(
       summary = "Get all city mappings",
@@ -30,6 +39,13 @@ public class CityStationController {
     return ResponseEntity.ok(cityStationService.getAllMappings());
   }
 
+  /**
+   * Creates a new mapping between a city and a weather station. Successfully adding a mapping
+   * automatically triggers an immediate weather data import for the newly registered station.
+   *
+   * @param mapping The city and station mapping details provided in the request body.
+   * @return A {@link ResponseEntity} containing the saved {@link CityStationMapping}.
+   */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Add a new city mapping",
