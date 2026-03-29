@@ -1,11 +1,13 @@
 package com.fujitsu.delivery.exception;
 
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -109,7 +111,7 @@ class GlobalExceptionHandlerTest {
 
         @PostMapping("/dummy/malformed-json")
         public void throwMalformedJson() {
-            throw new HttpMessageNotReadableException("JSON parse error", (org.springframework.http.HttpInputMessage) null);
+            throw new HttpMessageNotReadableException("JSON parse error", mock(HttpInputMessage.class));
         }
     }
 }
