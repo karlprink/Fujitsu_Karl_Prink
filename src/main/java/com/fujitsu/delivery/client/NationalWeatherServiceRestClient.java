@@ -1,6 +1,6 @@
 package com.fujitsu.delivery.client;
 
-import com.fujitsu.delivery.dto.WeatherDataXmlDTO;
+import com.fujitsu.delivery.dto.NationalWeatherServiceWeatherData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,8 +26,8 @@ public class NationalWeatherServiceRestClient {
      * * @return WeatherDataXmlDTO.Observations containing the timestamp and list of stations
      * @throws org.springframework.web.client.RestClientException if the API request fails
      */
-    public WeatherDataXmlDTO.Observations fetchObservations() {
+    public NationalWeatherServiceWeatherData.Observations fetchObservations() {
         log.info("Fetching weather data from external portal: {}", weatherUrl);
-        return restTemplate.getForObject(weatherUrl, WeatherDataXmlDTO.Observations.class);
+        return restTemplate.getForObject(weatherUrl, NationalWeatherServiceWeatherData.Observations.class);
     }
 }

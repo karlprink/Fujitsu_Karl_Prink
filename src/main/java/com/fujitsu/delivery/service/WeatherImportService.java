@@ -1,8 +1,7 @@
 package com.fujitsu.delivery.service;
 
 import com.fujitsu.delivery.client.NationalWeatherServiceRestClient;
-import com.fujitsu.delivery.dto.WeatherDataXmlDTO;
-import com.fujitsu.delivery.entity.CityStationMapping;
+import com.fujitsu.delivery.dto.NationalWeatherServiceWeatherData;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.repository.CityStationMappingRepository;
 import com.fujitsu.delivery.repository.WeatherDataRepository;
@@ -45,7 +44,7 @@ public class WeatherImportService {
   @Transactional
   public void importWeatherData() {
     try {
-      WeatherDataXmlDTO.Observations observations = weatherClient.fetchObservations();
+      NationalWeatherServiceWeatherData.Observations observations = weatherClient.fetchObservations();
 
       // Early-return
       if (observations == null || observations.getStations() == null) {
@@ -149,7 +148,7 @@ public class WeatherImportService {
    * @param timestamp The observation timestamp
    * @return A mapped WeatherData entity
    */
-  private WeatherData buildWeatherData(WeatherDataXmlDTO.Station station, LocalDateTime timestamp) {
+  private WeatherData buildWeatherData(NationalWeatherServiceWeatherData.Station station, LocalDateTime timestamp) {
     return WeatherData.builder()
             .stationName(station.getName())
             .wmoCode(station.getWmocode())
