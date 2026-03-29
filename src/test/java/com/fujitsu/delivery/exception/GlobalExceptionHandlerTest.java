@@ -109,7 +109,7 @@ class GlobalExceptionHandlerTest {
 
         @PostMapping("/dummy/malformed-json")
         public void throwMalformedJson() {
-            throw new HttpMessageNotReadableException("JSON parse error", (Throwable) null);
+            throw new HttpMessageNotReadableException("JSON parse error", (org.springframework.http.HttpInputMessage) null);
         }
     }
 }

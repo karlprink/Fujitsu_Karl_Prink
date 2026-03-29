@@ -55,7 +55,7 @@ class BaseFeeServiceTest {
         List<BaseFee> result = baseFeeService.getAllBaseFees();
 
         assertEquals(1, result.size());
-        assertEquals("TALLINN", result.get(0).getCity());
+        assertEquals("TALLINN", result.getFirst().getCity());
         verify(baseFeeRepository, times(1)).findAll();
     }
 

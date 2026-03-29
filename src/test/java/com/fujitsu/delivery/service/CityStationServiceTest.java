@@ -76,7 +76,7 @@ class CityStationServiceTest {
         List<CityStationMapping> result = cityStationService.getAllMappings();
 
         assertEquals(1, result.size());
-        assertEquals("KURESSAARE", result.get(0).getCity());
+        assertEquals("KURESSAARE", result.getFirst().getCity());
     }
 
     /**
