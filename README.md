@@ -174,6 +174,8 @@ Delivery fee surcharges (Wind, Temperature, Phenomenon) are implemented as separ
 
 By using @RestControllerAdvice, we ensure that even technical errors return a user-friendly JSON instead of a generic error page.
 
+----
+
 ## Layered Architecture
 
 The application follows a strict Layered Architecture pattern to ensure a clean Separation of Concerns (SOC). This makes the codebase modular, easy to test, and maintainable.
@@ -185,4 +187,5 @@ The application follows a strict Layered Architecture pattern to ensure a clean 
 **Data Access/Repository Layer:** Uses Spring Data JPA to interact with the H2 database. It abstracts complex SQL queries into simple, reusable method signatures.
 
 **Infrastructure/External Layer:** Manages communication with the Estonian Environment Agency XML API via a dedicated RestClient, ensuring that external API changes don't leak into the core business logic.
+
 ---
