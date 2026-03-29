@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class WeatherImportService {
 
   private final WeatherDataRepository weatherDataRepository;
@@ -41,7 +42,6 @@ public class WeatherImportService {
    * Uses @Transactional to ensure atomicity; if an error occurs during saving,
    * the transaction is rolled back.
    */
-  @Transactional
   public void importWeatherData() {
     try {
       NationalWeatherServiceWeatherData.Observations observations = weatherClient.fetchObservations();
