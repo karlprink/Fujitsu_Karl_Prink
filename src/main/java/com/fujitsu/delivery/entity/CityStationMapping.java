@@ -13,13 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CityStationMapping {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String city;
+  @Column(unique = true, nullable = false)
+  private String city;
 
-    @Column(nullable = false)
-    private String stationName;
+  @Column(nullable = false)
+  private String stationName;
 }

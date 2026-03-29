@@ -20,6 +20,5 @@ public class RestTemplateConfig {
     return restTemplate;
   }
 
-
   // TODO dokumenteeri api swaggeriga
 }

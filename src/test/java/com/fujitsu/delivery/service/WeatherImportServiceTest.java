@@ -22,8 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * Unit tests for WeatherImportService using Mockito.
- * Verifies the dynamic filtering, persistence logic, and startup synchronization.
+ * Unit tests for WeatherImportService using Mockito. Verifies the dynamic filtering, persistence
+ * logic, and startup synchronization.
  */
 @ExtendWith(MockitoExtension.class)
 class WeatherImportServiceTest {
@@ -35,48 +35,52 @@ class WeatherImportServiceTest {
   @Captor private ArgumentCaptor<List<WeatherData>> weatherDataListCaptor;
 
   /**
-   * Spy is used to allow mocking specific internal method calls
-   * while testing the startup logic.
+   * Spy is used to allow mocking specific internal method calls while testing the startup logic.
    */
   private WeatherImportService weatherImportService;
 
   @BeforeEach
   void setUp() {
-    weatherImportService = Mockito.spy(new WeatherImportService(
-            weatherDataRepository,
-            weatherClient,
-            cityStationMappingRepository
-    ));
+    weatherImportService =
+        Mockito.spy(
+            new WeatherImportService(
+                weatherDataRepository, weatherClient, cityStationMappingRepository));
 
     // Injecting the cron expression manually since @Value is not processed in unit tests
-    ReflectionTestUtils.setField(
-            weatherImportService, "cronExpressionString", "0 15 * * * ?");
+    ReflectionTestUtils.setField(weatherImportService, "cronExpressionString", "0 15 * * * ?");
   }
 
   /**
-   * Tests that weather data is correctly fetched, dynamically filtered based on
-   * active city mappings, and saved to the repository.
+   * Tests that weather data is correctly fetched, dynamically filtered based on active city
+   * mappings, and saved to the repository.
    */
   @Test
   void importWeatherData_success_filtersAndSavesCorrectStations() {
     // Arrange: Mock active city-to-station mappings from the database
-    CityStationMapping tallinnMapping = CityStationMapping.builder().city("TALLINN").stationName("Tallinn-Harku").build();
-    CityStationMapping tartuMapping = CityStationMapping.builder().city("TARTU").stationName("Tartu-Tõravere").build();
+    CityStationMapping tallinnMapping =
+        CityStationMapping.builder().city("TALLINN").stationName("Tallinn-Harku").build();
+    CityStationMapping tartuMapping =
+        CityStationMapping.builder().city("TARTU").stationName("Tartu-Tõravere").build();
     when(cityStationMappingRepository.findAll()).thenReturn(List.of(tallinnMapping, tartuMapping));
 
     // Arrange: Mock the XML API response with three stations (one should be filtered out)
-    NationalWeatherServiceWeatherData.Observations mockObservations = new NationalWeatherServiceWeatherData.Observations();
+    NationalWeatherServiceWeatherData.Observations mockObservations =
+        new NationalWeatherServiceWeatherData.Observations();
     mockObservations.setTimestamp(1710000000L); // Random Unix timestamp
 
-    NationalWeatherServiceWeatherData.Station tallinn = createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
-    NationalWeatherServiceWeatherData.Station tartu = createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
-    NationalWeatherServiceWeatherData.Station randomCity = createMockStation("Võru", "26258", 0.0, 1.0, ""); // Unmapped station
+    NationalWeatherServiceWeatherData.Station tallinn =
+        createMockStation("Tallinn-Harku", "26038", 2.5, 4.1, "Light snow shower");
+    NationalWeatherServiceWeatherData.Station tartu =
+        createMockStation("Tartu-Tõravere", "26242", -1.5, 2.0, "");
+    NationalWeatherServiceWeatherData.Station randomCity =
+        createMockStation("Võru", "26258", 0.0, 1.0, ""); // Unmapped station
 
     mockObservations.setStations(List.of(tallinn, tartu, randomCity));
 
     when(weatherClient.fetchObservations()).thenReturn(mockObservations);
-    when(weatherDataRepository.existsByStationNameAndObservationTimestamp(anyString(), any(LocalDateTime.class)))
-            .thenReturn(false);
+    when(weatherDataRepository.existsByStationNameAndObservationTimestamp(
+            anyString(), any(LocalDateTime.class)))
+        .thenReturn(false);
 
     // Act
     weatherImportService.importWeatherData();
@@ -90,9 +94,7 @@ class WeatherImportServiceTest {
     assertEquals("Tartu-Tõravere", savedData.get(1).getStationName());
   }
 
-  /**
-   * Tests that the service does nothing when the API returns an empty or null response.
-   */
+  /** Tests that the service does nothing when the API returns an empty or null response. */
   @Test
   void importWeatherData_emptyResponse_doesNothing() {
     // Arrange
@@ -105,28 +107,25 @@ class WeatherImportServiceTest {
     verify(weatherDataRepository, never()).saveAll(any());
   }
 
-  /**
-   * Tests that a RuntimeException is thrown and logged when the external API call fails.
-   */
+  /** Tests that a RuntimeException is thrown and logged when the external API call fails. */
   @Test
   void importWeatherData_apiError_throwsRuntimeException() {
     // Arrange
     when(weatherClient.fetchObservations()).thenThrow(new RuntimeException("API is down"));
 
     // Act & Assert
-    RuntimeException exception = assertThrows(RuntimeException.class, () -> weatherImportService.importWeatherData());
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> weatherImportService.importWeatherData());
     assertEquals("Weather data import failed", exception.getMessage());
     verify(weatherDataRepository, never()).saveAll(any());
   }
 
-  /**
-   * Tests that an import is triggered on application startup if the database is empty.
-   */
+  /** Tests that an import is triggered on application startup if the database is empty. */
   @Test
   void checkAndImportDataOnStartup_databaseEmpty_triggersImport() {
     // Arrange
     when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
-            .thenReturn(Optional.empty());
+        .thenReturn(Optional.empty());
 
     // Prevent the actual data fetching call
     doNothing().when(weatherImportService).importWeatherData();
@@ -139,17 +138,17 @@ class WeatherImportServiceTest {
   }
 
   /**
-   * Tests that startup import is skipped when recent data (within the cron interval)
-   * already exists in the database.
+   * Tests that startup import is skipped when recent data (within the cron interval) already exists
+   * in the database.
    */
   @Test
   void checkAndImportDataOnStartup_recentDataExists_skipsImport() {
     // Arrange: Cron interval is 1 hour, mock data is only 30 minutes old
-    WeatherData recentData = WeatherData.builder()
-            .observationTimestamp(LocalDateTime.now().minusMinutes(30)).build();
+    WeatherData recentData =
+        WeatherData.builder().observationTimestamp(LocalDateTime.now().minusMinutes(30)).build();
 
     when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
-            .thenReturn(Optional.of(recentData));
+        .thenReturn(Optional.of(recentData));
 
     // Act
     weatherImportService.checkAndImportDataOnStartup();
@@ -159,17 +158,17 @@ class WeatherImportServiceTest {
   }
 
   /**
-   * Tests that startup import is triggered when the latest data in the database
-   * is older than the configured cron interval.
+   * Tests that startup import is triggered when the latest data in the database is older than the
+   * configured cron interval.
    */
   @Test
   void checkAndImportDataOnStartup_oldDataExists_triggersImport() {
     // Arrange: Cron interval is 1 hour, mock data is 65 minutes old
-    WeatherData oldData = WeatherData.builder()
-            .observationTimestamp(LocalDateTime.now().minusMinutes(65)).build();
+    WeatherData oldData =
+        WeatherData.builder().observationTimestamp(LocalDateTime.now().minusMinutes(65)).build();
 
     when(weatherDataRepository.findFirstByOrderByObservationTimestampDesc())
-            .thenReturn(Optional.of(oldData));
+        .thenReturn(Optional.of(oldData));
 
     doNothing().when(weatherImportService).importWeatherData();
 
@@ -181,8 +180,8 @@ class WeatherImportServiceTest {
   }
 
   /**
-   * Helper method to create mock station DTOs.
-   * * @param name Station name
+   * Helper method to create mock station DTOs. * @param name Station name
+   *
    * @param wmo WMO code
    * @param temp Air temperature
    * @param wind Wind speed
@@ -190,8 +189,9 @@ class WeatherImportServiceTest {
    * @return Mapped WeatherDataXmlDTO.Station object
    */
   private NationalWeatherServiceWeatherData.Station createMockStation(
-          String name, String wmo, Double temp, Double wind, String phenomenon) {
-    NationalWeatherServiceWeatherData.Station station = new NationalWeatherServiceWeatherData.Station();
+      String name, String wmo, Double temp, Double wind, String phenomenon) {
+    NationalWeatherServiceWeatherData.Station station =
+        new NationalWeatherServiceWeatherData.Station();
     station.setName(name);
     station.setWmocode(wmo);
     station.setAirTemperature(temp);

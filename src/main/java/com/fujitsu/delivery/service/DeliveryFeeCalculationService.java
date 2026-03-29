@@ -6,11 +6,10 @@ import com.fujitsu.delivery.entity.BaseFee;
 import com.fujitsu.delivery.entity.WeatherData;
 import com.fujitsu.delivery.repository.BaseFeeRepository;
 import com.fujitsu.delivery.strategy.WeatherExtraFeeStrategy;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -21,14 +20,16 @@ public class DeliveryFeeCalculationService {
   private final CityStationService cityStationService;
   private final List<WeatherExtraFeeStrategy> weatherExtraFeeStrategies;
 
-  public DeliveryFeeResponse calculateDeliveryFee(String city, String vehicleTypeStr, LocalDateTime timestamp) {
+  public DeliveryFeeResponse calculateDeliveryFee(
+      String city, String vehicleTypeStr, LocalDateTime timestamp) {
     String cityUpper = city.toUpperCase();
     String vehicleUpper = vehicleTypeStr.toUpperCase();
     LocalDateTime targetTime = (timestamp != null) ? timestamp : LocalDateTime.now();
 
     double baseFee = calculateRegionalBaseFee(cityUpper, vehicleUpper);
 
-    List<WeatherExtraFeeStrategy> applicableStrategies = weatherExtraFeeStrategies.stream()
+    List<WeatherExtraFeeStrategy> applicableStrategies =
+        weatherExtraFeeStrategies.stream()
             .filter(strategy -> strategy.supports(vehicleUpper))
             .toList();
 
@@ -36,13 +37,18 @@ public class DeliveryFeeCalculationService {
       return new DeliveryFeeResponse(baseFee);
     }
 
-    String stationName = cityStationService.getStationNameByCity(cityUpper)
-            .orElseThrow(() -> new IllegalArgumentException(
-                    "Weather station mapping not found for city: " + cityUpper));
+    String stationName =
+        cityStationService
+            .getStationNameByCity(cityUpper)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Weather station mapping not found for city: " + cityUpper));
 
     WeatherData latestWeather = weatherDataAdapter.getLatestWeatherData(stationName, targetTime);
 
-    double extraFee = applicableStrategies.stream()
+    double extraFee =
+        applicableStrategies.stream()
             .mapToDouble(strategy -> strategy.execute(latestWeather, vehicleUpper))
             .sum();
 
@@ -50,10 +56,13 @@ public class DeliveryFeeCalculationService {
   }
 
   private double calculateRegionalBaseFee(String city, String vehicle) {
-    BaseFee baseFeeRule = baseFeeRepository
+    BaseFee baseFeeRule =
+        baseFeeRepository
             .findByCityIgnoreCaseAndVehicleTypeIgnoreCase(city, vehicle)
-            .orElseThrow(() -> new IllegalArgumentException(
-                    "Base fee rule not found for city: " + city + " and vehicle: " + vehicle));
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Base fee rule not found for city: " + city + " and vehicle: " + vehicle));
 
     return baseFeeRule.getFee();
   }

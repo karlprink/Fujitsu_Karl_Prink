@@ -1,6 +1,9 @@
 package com.fujitsu.delivery.exception;
 
 import com.fujitsu.delivery.dto.ApiErrorResponse;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,9 +12,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Global exception handler to provide consistent JSON error responses across the REST API. This
@@ -28,7 +28,8 @@ public class GlobalExceptionHandler {
    * @return ResponseEntity containing a 400 Bad Request status and the error details
    */
   @ExceptionHandler(VehicleForbiddenException.class)
-  public ResponseEntity<ApiErrorResponse> handleVehicleForbiddenException(VehicleForbiddenException exception) {
+  public ResponseEntity<ApiErrorResponse> handleVehicleForbiddenException(
+      VehicleForbiddenException exception) {
     return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
   }
 
@@ -40,7 +41,8 @@ public class GlobalExceptionHandler {
    * @return ResponseEntity containing a 400 Bad Request status and the error details
    */
   @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
+  public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(
+      IllegalArgumentException exception) {
     return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
   }
 
@@ -48,11 +50,13 @@ public class GlobalExceptionHandler {
    * Handles Spring exceptions thrown when a required API request parameter (e.g., 'city' or
    * 'vehicleType') is missing from the request URL.
    *
-   * @param ex The caught MissingServletRequestParameterException containing the missing parameter name
+   * @param ex The caught MissingServletRequestParameterException containing the missing parameter
+   *     name
    * @return ResponseEntity containing a 400 Bad Request status and a descriptive error message
    */
   @ExceptionHandler(MissingServletRequestParameterException.class)
-  public ResponseEntity<ApiErrorResponse> handleMissingParams(MissingServletRequestParameterException ex) {
+  public ResponseEntity<ApiErrorResponse> handleMissingParams(
+      MissingServletRequestParameterException ex) {
     String message = "Missing required parameter: " + ex.getParameterName();
     return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
   }
@@ -68,7 +72,8 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleGeneralException(Exception exception) {
     System.err.println("Unexpected internal error: " + exception.getMessage());
-    return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected internal server error occurred");
+    return buildErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected internal server error occurred");
   }
 
   /**
@@ -96,21 +101,22 @@ public class GlobalExceptionHandler {
     body.put("expectedFormat", expectedFormat);
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Forces JSON output
-            .body(body);
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Forces JSON output
+        .body(body);
   }
 
   /**
-   * Helper method to construct a standardized API error response.
-   * Replaces the old LinkedHashMap implementation with the robust ApiErrorResponse DTO
-   * and guarantees the response is returned as JSON.
+   * Helper method to construct a standardized API error response. Replaces the old LinkedHashMap
+   * implementation with the robust ApiErrorResponse DTO and guarantees the response is returned as
+   * JSON.
    *
-   * @param status  The HTTP status code to return
+   * @param status The HTTP status code to return
    * @param message The descriptive error message
    * @return A ResponseEntity containing the ApiErrorResponse object and JSON headers
    */
   private ResponseEntity<ApiErrorResponse> buildErrorResponse(HttpStatus status, String message) {
-    ApiErrorResponse errorResponse = ApiErrorResponse.builder()
+    ApiErrorResponse errorResponse =
+        ApiErrorResponse.builder()
             .timestamp(LocalDateTime.now())
             .status(status.value())
             .error(status.getReasonPhrase())
@@ -118,9 +124,7 @@ public class GlobalExceptionHandler {
             .build();
 
     return ResponseEntity.status(status)
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Forces JSON output
-            .body(errorResponse);
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Forces JSON output
+        .body(errorResponse);
   }
-
-
 }

@@ -50,11 +50,11 @@ class FeeRuleControllerTest {
     when(baseFeeService.getAllBaseFees()).thenReturn(List.of(fee1, fee2));
 
     mockMvc
-            .perform(get(BASE_URL))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.size()").value(2))
-            .andExpect(jsonPath("$[0].city").value(TALLINN))
-            .andExpect(jsonPath("$[1].city").value(TARTU));
+        .perform(get(BASE_URL))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.size()").value(2))
+        .andExpect(jsonPath("$[0].city").value(TALLINN))
+        .andExpect(jsonPath("$[1].city").value(TARTU));
   }
 
   /** Tests creating a new base fee. Expects a 200 OK status and the saved JSON object. */
@@ -66,13 +66,13 @@ class FeeRuleControllerTest {
     when(baseFeeService.createBaseFee(any(BaseFee.class))).thenReturn(savedFee);
 
     mockMvc
-            .perform(
-                    post(BASE_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(newFee)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.city").value(NARVA));
+        .perform(
+            post(BASE_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newFee)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(3))
+        .andExpect(jsonPath("$.city").value(NARVA));
   }
 
   /**
@@ -85,15 +85,16 @@ class FeeRuleControllerTest {
     BaseFee updateRequest = BaseFee.builder().city(TALLINN).vehicleType(BIKE).fee(4.0).build();
     BaseFee updatedFee = BaseFee.builder().id(id).city(TALLINN).vehicleType(BIKE).fee(4.0).build();
 
-    when(baseFeeService.updateBaseFee(eq(id), any(BaseFee.class))).thenReturn(Optional.of(updatedFee));
+    when(baseFeeService.updateBaseFee(eq(id), any(BaseFee.class)))
+        .thenReturn(Optional.of(updatedFee));
 
     mockMvc
-            .perform(
-                    put(BASE_URL + "/{id}", id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fee").value(4.0));
+        .perform(
+            put(BASE_URL + "/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.fee").value(4.0));
   }
 
   /** Tests updating a base fee that does not exist. Expects a 404 Not Found status. */
@@ -105,11 +106,11 @@ class FeeRuleControllerTest {
     when(baseFeeService.updateBaseFee(eq(id), any(BaseFee.class))).thenReturn(Optional.empty());
 
     mockMvc
-            .perform(
-                    put(BASE_URL + "/{id}", id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isNotFound());
+        .perform(
+            put(BASE_URL + "/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isNotFound());
   }
 
   /**
@@ -147,7 +148,7 @@ class FeeRuleControllerTest {
   @Test
   void createBaseFee_malformedJson_returnsBadRequestWithExpectedFormat() throws Exception {
     String malformedJson =
-            """
+        """
                     {
                         "city": "TALLINN"
                         "vehicleType": "BIKE",
@@ -155,16 +156,13 @@ class FeeRuleControllerTest {
                     }""";
 
     mockMvc
-            .perform(
-                    post(BASE_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(malformedJson))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Bad Request"))
-            .andExpect(
-                    jsonPath("$.message")
-                            .value("Malformed JSON request. Please check your request body format."))
-            .andExpect(jsonPath("$.expectedFormat").exists())
-            .andExpect(jsonPath("$.expectedFormat.city").value("String (e.g., 'TALLINN')"));
+        .perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(malformedJson))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(
+            jsonPath("$.message")
+                .value("Malformed JSON request. Please check your request body format."))
+        .andExpect(jsonPath("$.expectedFormat").exists())
+        .andExpect(jsonPath("$.expectedFormat.city").value("String (e.g., 'TALLINN')"));
   }
 }
