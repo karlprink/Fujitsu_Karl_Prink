@@ -1,0 +1,332 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Fujitsu Trial Task API (Karl Prink)",
+    "description": "REST API for calculating delivery fees based on dynamic regional rules, vehicle types, and real-time weather conditions.",
+    "contact": {
+      "name": "Karl Prink",
+      "email": "karlprink58@gmail.com"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "1. Delivery Fee Calculator",
+      "description": "Endpoints for calculating the final delivery fee based on vehicle, city, and weather."
+    },
+    {
+      "name": "2. City & Station Management",
+      "description": "Endpoints for dynamically mapping cities to National Weather Service stations."
+    },
+    {
+      "name": "3. Base Fee Rules Management",
+      "description": "Endpoints for managing the core base fee matrix for different cities and vehicle types."
+    }
+
+  ],
+  "paths": {
+    "/api/rules/base-fees/{id}": {
+      "put": {
+        "tags": [
+          "3. Base Fee Rules Management"
+        ],
+        "summary": "Update an existing base fee rule",
+        "description": "Updates the city, vehicle type, or fee amount for a specific rule ID.",
+        "operationId": "updateBaseFee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the base fee rule to update",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BaseFee"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseFee"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "3. Base Fee Rules Management"
+        ],
+        "summary": "Delete a base fee rule",
+        "description": "Removes a specific base fee rule by its ID.",
+        "operationId": "deleteBaseFee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the base fee rule to delete",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rules/base-fees": {
+      "get": {
+        "tags": [
+          "3. Base Fee Rules Management"
+        ],
+        "summary": "Get all base fee rules",
+        "description": "Retrieves the complete list of configured base fees.",
+        "operationId": "getAllBaseFees",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BaseFee"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "3. Base Fee Rules Management"
+        ],
+        "summary": "Create a new base fee rule",
+        "description": "Adds a new base fee rule. Will fail if a rule for the given city and vehicle combination already exists.",
+        "operationId": "createBaseFee",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BaseFee"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rule created successfully",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseFee"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Duplicate rule already exists",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseFee"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cities": {
+      "get": {
+        "tags": [
+          "2. City & Station Management"
+        ],
+        "summary": "Get all city mappings",
+        "description": "Retrieves a list of all currently configured cities and their corresponding weather stations.",
+        "operationId": "getAllCities",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CityStationMapping"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "2. City & Station Management"
+        ],
+        "summary": "Add a new city mapping",
+        "description": "Maps a new city to a weather station. Automatically triggers an immediate weather data import for the new configuration.",
+        "operationId": "addCity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CityStationMapping"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "City mapping added successfully and weather data imported",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityStationMapping"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/delivery-fee": {
+      "get": {
+        "tags": [
+          "1. Delivery Fee Calculator"
+        ],
+        "summary": "Calculate delivery fee",
+        "description": "Calculates the total delivery fee for a specific city and vehicle type. Automatically applies weather-based surcharges if applicable.",
+        "operationId": "calculateFee",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "description": "City where the delivery takes place",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Tallinn"
+            }
+          },
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "description": "Type of the vehicle used for delivery",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bike"
+            }
+          },
+          {
+            "name": "timestamp",
+            "in": "query",
+            "description": "Optional timestamp for historical fee calculation (ISO format: yyyy-MM-ddTHH:mm:ss)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-03-27T12:00:00"
+            }
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryFeeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, missing parameters, or vehicle usage is forbidden by weather conditions"
+          },
+          "500": {
+            "description": "Internal server error or weather data unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BaseFee": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "city": {
+            "type": "string"
+          },
+          "vehicleType": {
+            "type": "string"
+          },
+          "fee": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "CityStationMapping": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "city": {
+            "type": "string"
+          },
+          "stationName": {
+            "type": "string"
+          }
+        }
+      },
+      "DeliveryFeeResponse": {
+        "type": "object",
+        "properties": {
+          "totalFee": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    }
+  }
+}
