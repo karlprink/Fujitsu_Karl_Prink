@@ -9,11 +9,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/rules/base-fees")
+@RequestMapping(value = "/api/rules/base-fees", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(
     name = "3. Base Fee Rules Management",
@@ -31,7 +32,7 @@ public class FeeRuleController {
     return ResponseEntity.ok(baseFeeService.getAllBaseFees());
   }
 
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Create a new base fee rule",
       description =
@@ -44,7 +45,7 @@ public class FeeRuleController {
     return ResponseEntity.ok(baseFeeService.createBaseFee(baseFee));
   }
 
-  @PutMapping("/{id}")
+  @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Update an existing base fee rule",
       description = "Updates the city, vehicle type, or fee amount for a specific rule ID.")

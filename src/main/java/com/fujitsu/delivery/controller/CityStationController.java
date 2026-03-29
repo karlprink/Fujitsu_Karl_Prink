@@ -7,11 +7,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/cities")
+@RequestMapping(value = "/api/cities", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(
     name = "2. City & Station Management",
@@ -29,7 +30,7 @@ public class CityStationController {
     return ResponseEntity.ok(cityStationService.getAllMappings());
   }
 
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Add a new city mapping",
       description =
