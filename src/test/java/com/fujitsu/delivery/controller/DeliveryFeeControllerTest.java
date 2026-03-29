@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fujitsu.delivery.dto.DeliveryFeeDTO;
+import com.fujitsu.delivery.dto.DeliveryFeeResponse;
 import com.fujitsu.delivery.exception.VehicleForbiddenException;
 import com.fujitsu.delivery.service.DeliveryFeeCalculationService;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * codes, and JSON response mapping.
  */
 @WebMvcTest(DeliveryFeeController.class)
-class DeliveryFeeControllerTest {
+class DeliveryFeeControllerTest { // TODO tee integratsioonitestid ilma servicei mockita
 
   @Autowired private MockMvc mockMvc;
 
@@ -32,9 +32,9 @@ class DeliveryFeeControllerTest {
    * @throws Exception if the MockMvc request execution fails
    */
   @Test
-  void calculateFee_validRequest_returnsOkAndFee() throws Exception {
+  void calculateFee_validRequest_returnsOkAndFee() throws Exception { // TODO teadmiseks: given when then
     when(feeCalculationService.calculateDeliveryFee("Tallinn", "Car", null))
-        .thenReturn(new DeliveryFeeDTO(4.0));
+        .thenReturn(new DeliveryFeeResponse(4.0));
 
     mockMvc
         .perform(get("/api/delivery-fee").param("city", "Tallinn").param("vehicleType", "Car"))
@@ -52,7 +52,7 @@ class DeliveryFeeControllerTest {
     LocalDateTime testTime = LocalDateTime.parse("2026-03-27T10:00:00");
 
     when(feeCalculationService.calculateDeliveryFee("Tartu", "Bike", testTime))
-        .thenReturn(new DeliveryFeeDTO(3.5));
+        .thenReturn(new DeliveryFeeResponse(3.5));
 
     mockMvc
         .perform(
