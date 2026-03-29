@@ -7,6 +7,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 import lombok.Data;
 
+/**
+ * Data Transfer Object for mapping the XML response from the National Weather Service. This class
+ * structure corresponds to the official Estonian Environment Agency weather observation format.
+ */
 public class NationalWeatherServiceWeatherData {
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,6 +24,10 @@ public class NationalWeatherServiceWeatherData {
     private List<Station> stations;
   }
 
+  /**
+   * Represents an individual "station" element within the XML. Maps specific weather metrics
+   * required for the delivery fee calculation.
+   */
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Station {

@@ -13,6 +13,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing regional base delivery fees. This controller provides full CRUD
+ * (Create, Read, Update, Delete) functionality for the base fee matrix, allowing dynamic pricing
+ * adjustments for different cities and vehicle types.
+ */
 @RestController
 @RequestMapping(value = "/api/rules/base-fees", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
@@ -24,6 +29,11 @@ public class FeeRuleController {
 
   private final BaseFeeService baseFeeService;
 
+  /**
+   * Retrieves all base fee rules currently configured in the system.
+   *
+   * @return A {@link ResponseEntity} containing a list of all {@link BaseFee} entities.
+   */
   @GetMapping
   @Operation(
       summary = "Get all base fee rules",
@@ -32,6 +42,14 @@ public class FeeRuleController {
     return ResponseEntity.ok(baseFeeService.getAllBaseFees());
   }
 
+  /**
+   * Creates a new base fee rule for a specific city and vehicle type.
+   *
+   * @param baseFee The base fee entity to be created.
+   * @return A {@link ResponseEntity} containing the created {@link BaseFee}.
+   * @throws IllegalArgumentException if a rule for the given city and vehicle combination already
+   *     exists.
+   */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Create a new base fee rule",
@@ -45,6 +63,14 @@ public class FeeRuleController {
     return ResponseEntity.ok(baseFeeService.createBaseFee(baseFee));
   }
 
+  /**
+   * Updates an existing base fee rule identified by its ID.
+   *
+   * @param id The unique identifier of the rule to update.
+   * @param updatedFee The new fee details to apply.
+   * @return A {@link ResponseEntity} with the updated {@link BaseFee}, or 404 Not Found if the ID
+   *     doesn't exist.
+   */
   @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Update an existing base fee rule",
@@ -59,6 +85,13 @@ public class FeeRuleController {
         .orElse(ResponseEntity.notFound().build());
   }
 
+  /**
+   * Deletes a specific base fee rule from the system by its ID.
+   *
+   * @param id The unique identifier of the rule to be removed.
+   * @return A {@link ResponseEntity} with 200 OK if deleted, or 404 Not Found if the ID doesn't
+   *     exist.
+   */
   @DeleteMapping("/{id}")
   @Operation(
       summary = "Delete a base fee rule",

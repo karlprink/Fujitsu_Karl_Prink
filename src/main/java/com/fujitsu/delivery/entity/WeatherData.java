@@ -12,6 +12,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Persistence entity representing a historical weather observation record. This entity stores
+ * snapshots of weather conditions fetched from the National Weather Service, which are then used to
+ * calculate dynamic delivery surcharges.
+ */
 @Entity
 @Table(name = "weather_data")
 @Getter

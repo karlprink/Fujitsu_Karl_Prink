@@ -11,6 +11,11 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * Core business service responsible for calculating the total delivery fee. It orchestrates the
+ * retrieval of regional base fees and delegates weather-based surcharge calculations to a
+ * collection of specialized strategies.
+ */
 @Service
 @RequiredArgsConstructor
 public class DeliveryFeeCalculationService {
@@ -20,6 +25,19 @@ public class DeliveryFeeCalculationService {
   private final CityStationService cityStationService;
   private final List<WeatherExtraFeeStrategy> weatherExtraFeeStrategies;
 
+  /**
+   * Calculates the final delivery fee for a specific city and vehicle type. The calculation process
+   * includes looking up the regional base fee, resolving the appropriate weather station, and
+   * applying all applicable weather surcharges (e.g., wind, temperature, phenomena).
+   *
+   * @param city The delivery destination city.
+   * @param vehicleTypeStr The type of vehicle used for delivery.
+   * @param timestamp Optional timestamp for historical calculations; defaults to the current time
+   *     if null.
+   * @return A {@link DeliveryFeeResponse} containing the summed total fee.
+   * @throws IllegalArgumentException if no base fee rule or city-station mapping is found, or if
+   *     weather conditions forbid the delivery.
+   */
   public DeliveryFeeResponse calculateDeliveryFee(
       String city, String vehicleTypeStr, LocalDateTime timestamp) {
     String cityUpper = city.toUpperCase();

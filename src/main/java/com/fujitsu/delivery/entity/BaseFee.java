@@ -6,6 +6,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Persistence entity representing a regional base delivery fee. This entity defines the starting
+ * price for a specific combination of city and vehicle type before any weather-related surcharges
+ * are applied.
+ */
 @Entity
 @Table(name = "base_fees")
 @Data
