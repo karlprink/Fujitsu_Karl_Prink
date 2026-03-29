@@ -43,14 +43,4 @@ public class FeeRuleController {
     return ResponseEntity.notFound().build();
   }
 
-  private ResponseEntity<ApiErrorResponse> buildErrorResponse(HttpStatus status, String message) {
-    ApiErrorResponse errorResponse = ApiErrorResponse.builder()
-            .timestamp(LocalDateTime.now())
-            .status(status.value())
-            .error(status.getReasonPhrase())
-            .message(message)
-            .build();
-
-    return new ResponseEntity<>(errorResponse, status);
-  }
 }
