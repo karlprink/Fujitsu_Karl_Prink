@@ -17,7 +17,7 @@ A robust Spring Boot REST application that calculates delivery fees for differen
 * **High Test Coverage:** Comprehensive unit and WebMvc tests using JUnit 5 and modern Mockito practices (`@MockitoBean`).
 * **Historical Weather Data Support:** Delivery fees can be calculated for past dates using the timestamp parameter.
 * **Dynamic Fee Management (CRUD):** Base fees are not hardcoded. They are stored in an H2 database and can be managed dynamically via a dedicated REST API without restarting the application.
-
+* **Interactive API Docs (Swagger):** Built-in Swagger UI for testing and exploring endpoints directly from the browser.
 
 ## Tech Stack
 
@@ -38,9 +38,9 @@ A robust Spring Boot REST application that calculates delivery fees for differen
 3. The application will be available at http://localhost:8080
 
 ---
-# API Usage
+# API Summary
 
-## Calculate Delivery Fee
+## 1. Calculate Delivery Fee
 
 **GET** `/api/delivery-fee`
 
@@ -101,8 +101,13 @@ curl -X PUT "http://localhost:8080/api/rules/base-fees/3" \
           "vehicleType": "BIKE",
           "fee": 4.0
          }'
+      ```
 ```
 
+## 3.Dynamic City & Station Management
+
+**POST** /api/cities
+Map a new city to an official weather station. Adding a new mapping triggers an immediate weather import for that station.
 
 ### Example Error Response (400 Bad Request)
 (Triggered if weather conditions are too extreme for the selected vehicle)
@@ -161,4 +166,23 @@ The scheduled CronJob utilizes a `SELECT EXISTS` database query to ensure that e
 
 The Dockerfile uses the `maven:eclipse-temurin-21` image just for building the `.jar`, and a much smaller `eclipse-temurin:21-jre-alpine` image for running it, keeping the final container size minimal.
 
+## Strategy Pattern
+
+Delivery fee surcharges (Wind, Temperature, Phenomenon) are implemented as separate strategies, making the system easy to extend without modifying the main service.
+
+## Global Exception Handling
+
+By using @RestControllerAdvice, we ensure that even technical errors return a user-friendly JSON instead of a generic error page.
+
+## Layered Architecture
+
+The application follows a strict Layered Architecture pattern to ensure a clean Separation of Concerns (SOC). This makes the codebase modular, easy to test, and maintainable.
+
+**Web/Controller Layer:** Handles incoming HTTP requests, performs basic input validation, and maps business results to standardized JSON responses using GlobalExceptionHandler.
+
+**Service/Business Layer:** The core of the application. It contains the business logic for fee calculations, weather data processing, and rule validation. It remains decoupled from the specific database or transport protocols.
+
+**Data Access/Repository Layer:** Uses Spring Data JPA to interact with the H2 database. It abstracts complex SQL queries into simple, reusable method signatures.
+
+**Infrastructure/External Layer:** Manages communication with the Estonian Environment Agency XML API via a dedicated RestClient, ensuring that external API changes don't leak into the core business logic.
 ---
