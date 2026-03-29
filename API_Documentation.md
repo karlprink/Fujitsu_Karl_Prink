@@ -1,4 +1,6 @@
-# API Reference
+# API
+
+**[Interactive API Documentation (Swagger)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/karlprink/Fujitsu_Karl_Prink/main/openapi.yaml)**
 
 This document describes the REST API endpoints available in the Delivery Fee Calculator application.
 
@@ -62,20 +64,38 @@ Triggered when city or vehicleType is missing from the request URL.
 
 
 #### 3. Invalid Argument (Unknown City or Vehicle)
-Triggered when an unrecognized value is provided for the parameters.
+Triggered when an unrecognized value is provided or no mapping exists.
 
 * **Code:** `400 Bad Request`
 * **Content:**
   ```json
   {
-  "timestamp": "2026-03-27T12:00:00.000000",
+  "timestamp": "2026-03-27T12:00:00.000",
   "status": 400,
   "error": "Bad Request",
-  "message": "Invalid city provided"
+  "message": "Base fee rule not found for city: VÕRU and vehicle: CAR"
   }
 
 
-#### 4. Internal Server Error
+#### 4. Malformed JSON Request
+Triggered when the request body contains invalid JSON.
+
+* **Code:** `400 Bad Request`
+* **Content:**
+  ```json
+  {
+  "timestamp": "2026-03-27T12:00:00.000",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Malformed JSON request. Please check your request body format.",
+  "expectedFormat": {
+    "city": "String (e.g., 'TALLINN')",
+    "vehicleType": "String (e.g., 'BIKE')",
+    "fee": "Number (e.g., 3.5)"
+  }
+---
+
+#### 5. Internal Server Error
 Triggered when an unexpected error occurs on the server (e.g., database connection failure).
 
 * **Code:** `500 Internal Server Error`
@@ -146,6 +166,8 @@ Adds a new pricing rule for a city and vehicle combination.
 **Success Response (200 OK):**
 Returns the saved entity with its generated `id`.
 
+**Error Response (400 Bad Request):** 
+If a rule for the specific City + Vehicle combination already exists.
 ---
 
 ### 2.3 Update an Existing Base Fee
@@ -185,3 +207,62 @@ Empty body if the deletion was successful.
 
 **Error Response (404 Not Found):**
 If the rule with the specified `{id}` does not exist.
+
+### 3. Manage City & Station Mappings
+
+Endpoints for dynamically mapping delivery cities to specific National Weather Service observation stations.
+
+**Base URL:** /api/cities
+**Content-Type:** application/json
+
+---
+
+### 3.1 Get All City Mappings
+
+Retrieves a list of all currently configured cities and their corresponding weather stations.
+
+**Method:** `GET`
+**Success Response (200 OK):**
+
+```json
+[
+  {
+    "id": 1,
+    "city": "TALLINN",
+    "stationName": "Tallinn-Harku"
+  },
+  {
+    "id": 2,
+    "city": "TARTU",
+    "stationName": "Tartu-Tõravere"
+  }
+]
+```
+---
+
+### 3.2 Add a New City Mapping
+
+Maps a new city to a weather station.
+
+**Note**: Successfully adding a new city mapping will automatically trigger an immediate background job to fetch the latest weather data for this specific station from the National Weather Service API.
+
+**Method:** `POST`
+**Request Body:**
+
+```json
+{
+  "city": "KURESSAARE",
+  "stationName": "Roomassaare"
+}
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+  "id": 4,
+  "city": "KURESSAARE",
+  "stationName": "Roomassaare"
+}
+```
+
